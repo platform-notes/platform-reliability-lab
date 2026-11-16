@@ -1,0 +1,26 @@
+{
+  "not_ready": {
+    "namespace": "fictional-lab",
+    "pod": "demo-blocked",
+    "service": "demo-web",
+    "status": {"phase": "Running", "ready": false},
+    "events": [{"reason": "Unhealthy", "message": "Readiness probe failed: HTTP 503"}],
+    "endpoints": [{"pod": "demo-blocked", "ready": false}]
+  },
+  "healthy": {
+    "namespace": "fictional-lab",
+    "pod": "demo-healthy",
+    "service": "demo-web",
+    "status": {"phase": "Running", "ready": true},
+    "events": [],
+    "endpoints": [{"pod": "demo-healthy", "ready": true}]
+  },
+  "incomplete": {
+    "namespace": "fictional-lab",
+    "pod": "demo-unknown",
+    "service": "demo-web",
+    "status": {"phase": "Running", "ready": false},
+    "events": null,
+    "endpoints": null
+  }
+}
