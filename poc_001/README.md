@@ -49,3 +49,36 @@ Os resultados descrevem essas observações e a causa raiz fica em aberto.
 As consultas usam somente a fixture empacotada, sem rede, Kubernetes,
 credenciais, escrita ou shell. O diagnóstico é uma regra fixa. Uma integração
 futura com inferência local requer autorização e validação separadas.
+
+## Modo A · Relatório determinístico
+
+Execute a partir da raiz. A opção `-B` desativa a gravação de bytecode pelo Python.
+
+```bash
+python3 -B -m poc_001 --mode deterministic --incident-id demo-a \
+  --scenario not_ready --namespace fictional-lab --pod demo-blocked --service demo-web
+python3 -B -m poc_001 --mode deterministic --incident-id demo-b \
+  --scenario healthy --namespace fictional-lab --pod demo-healthy --service demo-web
+python3 -B -m poc_001 --mode deterministic --incident-id demo-c \
+  --scenario incomplete --namespace fictional-lab --pod demo-unknown --service demo-web
+```
+
+Cada comando consulta as três fontes uma única vez. O catálogo imutável e
+`diagnose()` usam cópias do mesmo conjunto de resultados. Escolha um
+`incident_id` distinto para cada incidente. Os IDs usam esse prefixo e um
+ordinal fixo por fonte. `raw_ref` é um ponteiro JSON para
+`diagnosis.raw_results` e `paths` contém ponteiros relativos ao retorno
+da ferramenta. O relatório inclui os retornos originais, observações,
+lacunas, erros, tempos em milissegundos e `ai.state = "not_used"`.
+Para a mesma entrada e fixture, o conteúdo do relatório é estável, com
+exceção dos tempos medidos.
+
+A CLI imprime um relatório JSON e retorna **0** quando a coleta termina sem
+erro operacional, inclusive em caso de evidência ausente. Retorna **1** com
+o relatório quando uma ferramenta falha. Para argumentos inválidos, retorna
+**2** e escreve o erro na saída de erro. No cenário incompleto, o Pod continua
+Running/NotReady e eventos e endpoints aparecem como duas lacunas distintas.
+O diagnóstico descreve apenas o snapshot fictício. A causa raiz fica em aberto.
+
+Use `python3 -B -m unittest discover -s tests -p 'test_poc_001*.py' -v`
+para executar os testes da POC.
