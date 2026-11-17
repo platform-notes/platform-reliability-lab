@@ -81,6 +81,21 @@ class AssistantTests(unittest.TestCase):
                              ("gap", "missing_evidence", "missing_evidence"))
         self.assertEqual(report["errors"], [])
 
+    def test_diagnosis_ids_reference_only_supporting_observations(self):
+        expected = {
+            "not_ready": ["test:1", "test:2", "test:3"],
+            "healthy": ["test:1", "test:3"],
+            "incomplete": [],
+        }
+        for scenario, pod, _ in CASES:
+            with self.subTest(scenario=scenario):
+                report = run_incident(incident(scenario, pod))
+                self.assertEqual(report["diagnosis"]["evidence_ids"], expected[scenario])
+                self.assertEqual([item["id"] for item in report["observations"]],
+                                 ["test:1", "test:2", "test:3"])
+                quality = "missing_evidence" if scenario == "incomplete" else "complete"
+                self.assertEqual(report["collection_quality"], quality)
+
     def test_empty_events_are_observed(self):
         report = run_incident(incident("healthy", "demo-healthy"))
         event = report["observations"][1]
@@ -111,6 +126,23 @@ class AssistantTests(unittest.TestCase):
         self.assertEqual(result["diagnosis"]["classification"], "insufficient_evidence")
         self.assertEqual([item["state"] for item in result["observations"]], ["timeout", "ok", "ok"])
         self.assertEqual(len(result["errors"]), 1)
+        self.assertEqual(result["errors"][0]["evidence_id"], "test:1")
+        self.assertEqual(result["collection_quality"], "operational_error")
+        self.assertEqual(result["diagnosis"]["evidence_ids"], [])
+
+    def test_error_takes_precedence_without_hiding_gaps(self):
+        with patch.object(readiness, "monotonic", side_effect=(0, 1, 2, 2, 3, 3)):
+            result = run_incident(incident("incomplete", "demo-unknown"))
+        self.assertEqual(result["collection_quality"], "operational_error")
+        self.assertEqual(result["diagnosis"]["classification"], "insufficient_evidence")
+        self.assertEqual(result["diagnosis"]["evidence_ids"], [])
+        self.assertEqual(result["errors"], [
+            {"source": "get_pod_status", "state": "timeout", "evidence_id": "test:1"},
+        ])
+        self.assertEqual(result["gaps"], [
+            {"source": "get_events", "state": "missing_evidence", "evidence_id": "test:2"},
+            {"source": "get_endpoints", "state": "missing_evidence", "evidence_id": "test:3"},
+        ])
 
     def test_collecting_unknown_pod_preserves_not_found(self):
         result = run_incident(incident(pod="other"))

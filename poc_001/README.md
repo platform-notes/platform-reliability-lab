@@ -73,6 +73,23 @@ lacunas, erros, tempos em milissegundos e `ai.state = "not_used"`.
 Para a mesma entrada e fixture, o conteúdo do relatório é estável, com
 exceção dos tempos medidos.
 
+### Contrato JSON
+
+`diagnosis.evidence_ids` cita somente observações que sustentam a classificação
+conclusiva emitida por `diagnose()`. Para `running_not_ready`, cita a condição
+do Pod, o evento e os endpoints. Para `healthy`, cita a condição do Pod e os
+endpoints. Para `insufficient_evidence`, o campo é uma lista vazia. Consulte
+`observations` para os fatos disponíveis e `gaps` e `errors` para os motivos
+de degradação da coleta. Cada lacuna ou erro mantém seu `evidence_id`
+rastreável até a observação e o retorno bruto correspondente.
+
+`collection_quality` descreve a coleta independentemente da classificação:
+
+- `complete` — as três consultas retornaram `ok`, incluindo listas vazias.
+- `missing_evidence` — houve ao menos uma lacuna e nenhum erro operacional.
+- `operational_error` — houve ao menos um erro operacional. Se também houver
+  lacunas, elas continuam registradas em `gaps`.
+
 A CLI imprime um relatório JSON e retorna **0** quando a coleta termina sem
 erro operacional, inclusive em caso de evidência ausente. Retorna **1** com
 o relatório quando uma ferramenta falha. Para argumentos inválidos, retorna

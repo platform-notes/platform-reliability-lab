@@ -9,6 +9,11 @@ from .evidence import TOOL_NAMES, build_catalog
 _INCIDENT_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,31}")
 _FIELDS = {"incident_id", "scenario", "namespace", "pod", "service"}
 _TIMEOUT_MS = 100
+# Attribution for an outcome already decided by diagnose().
+_SUPPORTING_SOURCES = {
+    "running_not_ready": TOOL_NAMES,
+    "healthy": ("get_pod_status", "get_endpoints"),
+}
 
 
 class InvalidIncident(ValueError):
@@ -60,6 +65,8 @@ def run_incident(incident):
 
     catalog = build_catalog(incident["incident_id"], collected)
     outcome = readiness.diagnose(_CollectedTools(catalog), **target, timeout_ms=_TIMEOUT_MS)
+    classification = outcome["outcome"]
+    supporting_sources = _SUPPORTING_SOURCES.get(classification, ())
     gaps = []
     errors = []
     for entry in catalog.observations:
@@ -68,14 +75,25 @@ def run_incident(incident):
             gaps.append(detail)
         elif entry.kind == "collection_error":
             errors.append(detail)
+    if errors:
+        collection_quality = "operational_error"
+    elif gaps:
+        collection_quality = "missing_evidence"
+    else:
+        collection_quality = "complete"
+
     return {
         "schema_version": 1,
         "incident": incident,
         "mode": "deterministic",
+        "collection_quality": collection_quality,
         "diagnosis": {
-            "classification": outcome["outcome"],
+            "classification": classification,
             "source": "deterministic",
-            "evidence_ids": [entry.id for entry in catalog.observations],
+            "evidence_ids": [
+                entry.id for entry in catalog.observations
+                if entry.state == "ok" and entry.source in supporting_sources
+            ],
             "raw_results": catalog.raw_results(),
         },
         "observations": [entry.as_dict() for entry in catalog.observations],
