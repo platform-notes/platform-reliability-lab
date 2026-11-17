@@ -1,12 +1,12 @@
-# POC-001 — Readiness de Pod
+# POC-001 — Pod readiness
 
-O laboratório usa Python 3.12+ e biblioteca padrão. A classe `ReadinessTools`
-carrega uma fixture JSON versionada e expõe três consultas em memória:
-`get_pod_status`, `get_events` e `get_endpoints`. O código fica fora do pacote
-do serviço e da imagem. As observações são fictícias e seguem a sequência
-descrita no [K8S-008](https://github.com/roger-oliveira86/kubernetes-from-scratch/pull/31).
+The lab uses Python 3.12 or later and the standard library. `ReadinessTools`
+loads a versioned JSON fixture and exposes three in-memory queries:
+`get_pod_status`, `get_events`, and `get_endpoints`. The code runs outside
+the service package and container image. The fictional observations follow
+the sequence described in [K8S-008](https://github.com/roger-oliveira86/kubernetes-from-scratch/pull/31).
 
-## Executar a partir da raiz
+## Run from the repository root
 
 ```bash
 python3 -m unittest discover -s tests -p test_poc_001.py -v
@@ -22,37 +22,38 @@ print(json.dumps(diagnose(
 PY
 ```
 
-## Contrato
+## Tool contract
 
-Cada ferramenta recebe um objeto com `scenario`, `namespace`, `timeout_ms` e
-exatamente um identificador. Status e eventos recebem `pod`. Endpoints recebe
-`service`. O cenário é um dos três nomes da fixture. Identificadores usam
-rótulos DNS de até 63 caracteres. O orçamento de cada consulta é um inteiro
-de 1 a 1.000 ms.
+Each tool accepts an object with `scenario`, `namespace`, `timeout_ms`,
+and one resource identifier. The status and event queries accept `pod`.
+The endpoints query accepts `service`. Use one of the three scenario
+names from the fixture. Resource identifiers are DNS labels of up to
+63 characters. The timeout is an integer from 1 to 1,000 ms.
 
-O retorno tem `tool`, `state` e `evidence`. Os estados são `ok`,
+Each result contains `tool`, `state`, and `evidence`. The states are `ok`,
 `invalid_input`, `not_found`, `missing_evidence`, `invalid_fixture`,
-`fixture_unavailable` e `timeout`. Uma lista vazia é uma observação válida.
-Um valor JSON nulo marca evidência ausente na fixture. O orçamento é
-verificado ao terminar a consulta síncrona em memória. A leitura inicial
-limitada a 16 KiB ocorre fora desse orçamento.
+`fixture_unavailable`, and `timeout`. An empty list is a valid observation.
+A JSON null in the fixture indicates missing evidence. The tool checks the
+timeout when the synchronous in-memory query finishes. The initial fixture
+read, limited to 16 KiB, occurs outside that budget.
 
-O diagnóstico retorna `running_not_ready` ao correlacionar o Pod Running
-com Ready falso, um evento de falha de readiness e a ausência de endpoints
-prontos. Retorna `healthy` se o Pod Running estiver Ready e vinculado a um
-endpoint pronto. Os demais casos resultam em `insufficient_evidence`.
-A janela observada e a relação entre Pod e Service são dadas pela fixture.
-Os resultados descrevem essas observações e a causa raiz fica em aberto.
+The deterministic diagnosis returns `running_not_ready` when the Pod is
+Running with `Ready=false`, a readiness probe failure was observed, and
+there are no ready endpoints. It returns `healthy` when the Pod is Running
+and Ready and has a ready endpoint. Other cases return `insufficient_evidence`.
+The fixture defines the observation window and the relationship between
+the Pod and Service. The root cause remains unknown.
 
-## Limites
+## Limits
 
-As consultas usam somente a fixture empacotada, sem rede, Kubernetes,
-credenciais, escrita ou shell. O diagnóstico é uma regra fixa. Uma integração
-futura com inferência local requer autorização e validação separadas.
+The queries read only the bundled fixture. They use no network connections,
+Kubernetes API, credentials, write operations, or shell commands. The diagnosis
+uses a fixed rule. Future local inference requires separate authorization
+and validation.
 
-## Modo A · Relatório determinístico
+## Mode A · Deterministic report
 
-Execute a partir da raiz. A opção `-B` desativa a gravação de bytecode pelo Python.
+Run from the repository root. The `-B` option disables Python bytecode writes.
 
 ```bash
 python3 -B -m poc_001 --mode deterministic --incident-id demo-a \
@@ -63,39 +64,39 @@ python3 -B -m poc_001 --mode deterministic --incident-id demo-c \
   --scenario incomplete --namespace fictional-lab --pod demo-unknown --service demo-web
 ```
 
-Cada comando consulta as três fontes uma única vez. O catálogo imutável e
-`diagnose()` usam cópias do mesmo conjunto de resultados. Escolha um
-`incident_id` distinto para cada incidente. Os IDs usam esse prefixo e um
-ordinal fixo por fonte. `raw_ref` é um ponteiro JSON para
-`diagnosis.raw_results` e `paths` contém ponteiros relativos ao retorno
-da ferramenta. O relatório inclui os retornos originais, observações,
-lacunas, erros, tempos em milissegundos e `ai.state = "not_used"`.
-Para a mesma entrada e fixture, o conteúdo do relatório é estável, com
-exceção dos tempos medidos.
+Each command queries all three sources exactly once. The immutable evidence
+catalog and `diagnose()` use copies of the same results. Choose a distinct
+`incident_id` for each incident. Observation IDs use that value as a prefix
+and a fixed ordinal for each source. The `raw_ref` field is a JSON Pointer
+into `diagnosis.raw_results`. The `paths` field contains pointers relative
+to the tool result. The report includes the raw results, observations,
+gaps, errors, timings in milliseconds, and `ai.state = "not_used"`.
+For the same input and fixture, report contents are stable except for
+the measured timings.
 
-### Contrato JSON
+### JSON contract
 
-`diagnosis.evidence_ids` cita somente observações que sustentam a classificação
-conclusiva emitida por `diagnose()`. Para `running_not_ready`, cita a condição
-do Pod, o evento e os endpoints. Para `healthy`, cita a condição do Pod e os
-endpoints. Para `insufficient_evidence`, o campo é uma lista vazia. Consulte
-`observations` para os fatos disponíveis e `gaps` e `errors` para os motivos
-de degradação da coleta. Cada lacuna ou erro mantém seu `evidence_id`
-rastreável até a observação e o retorno bruto correspondente.
+`diagnosis.evidence_ids` lists the supporting observations for a conclusive
+classification from `diagnose()`. For `running_not_ready`, it references
+the Pod condition, events, and endpoints. For `healthy`, it references
+the Pod condition and endpoints. For `insufficient_evidence`, the list is
+empty. See `observations` for the available facts and `gaps` and `errors`
+for details about degraded collection. Each gap or error has an
+`evidence_id` that links to its observation and raw tool result.
 
-`collection_quality` descreve a coleta independentemente da classificação:
+`collection_quality` describes the collection independently of the classification.
 
-- `complete` — as três consultas retornaram `ok`, incluindo listas vazias.
-- `missing_evidence` — houve ao menos uma lacuna e nenhum erro operacional.
-- `operational_error` — houve ao menos um erro operacional. Se também houver
-  lacunas, elas continuam registradas em `gaps`.
+- `complete` means all three queries returned `ok`, including empty lists.
+- `missing_evidence` means at least one source had missing evidence and no query reported an operational error.
+- `operational_error` means at least one query reported an operational error. Any missing evidence remains listed in `gaps`.
 
-A CLI imprime um relatório JSON e retorna **0** quando a coleta termina sem
-erro operacional, inclusive em caso de evidência ausente. Retorna **1** com
-o relatório quando uma ferramenta falha. Para argumentos inválidos, retorna
-**2** e escreve o erro na saída de erro. No cenário incompleto, o Pod continua
-Running/NotReady e eventos e endpoints aparecem como duas lacunas distintas.
-O diagnóstico descreve apenas o snapshot fictício. A causa raiz fica em aberto.
+The CLI prints a JSON report and exits with **0** when collection completes
+without operational errors, including when evidence is missing. It exits
+with **1** and prints the report if a tool fails. With invalid arguments,
+it exits with **2** and writes an error to stderr. In the incomplete scenario,
+the Pod remains Running/NotReady and the report lists separate gaps for
+events and endpoints. The diagnosis applies to the fictional snapshot.
+The root cause remains unknown.
 
-Use `python3 -B -m unittest discover -s tests -p 'test_poc_001*.py' -v`
-para executar os testes da POC.
+Run the POC tests with
+`python3 -B -m unittest discover -s tests -p 'test_poc_001*.py' -v`.
