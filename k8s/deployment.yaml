@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reliability-demo
-  namespace: sre-reliability-lab
+  namespace: platform-reliability-lab
 spec:
   replicas: 1
   selector:
@@ -13,6 +13,7 @@ spec:
       labels:
         app: reliability-demo
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
@@ -21,7 +22,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: service
-          image: ghcr.io/YOUR_USERNAME/sre-reliability-lab:VERSION
+          image: ghcr.io/YOUR_USERNAME/platform-reliability-lab:VERSION
           ports:
             - name: http
               containerPort: 8080

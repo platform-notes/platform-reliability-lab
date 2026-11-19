@@ -93,6 +93,14 @@ curl -fsS http://127.0.0.1:8080/metrics
 
 The `/failure` endpoint requires explicit opt-in through
 `ENABLE_FAILURE_ENDPOINT=true`. Use it only for a bounded failure drill.
+`MAX_CONNECTIONS` defaults to 64 active request handlers (1–4096 accepted); extra
+connections receive HTTP 503. Each connection has a 10-second socket timeout.
+For Kubernetes, keep `terminationGracePeriodSeconds` (default 30 seconds)
+longer than the 10-second socket timeout to allow in-flight requests to finish.
+SIGTERM/SIGINT trigger an orderly server shutdown, and interrupted writes
+still record request outcomes. The failure switch is read once at server startup;
+restart to change it. Request logs and metrics record only known route labels
+(or `unmatched`), never raw paths. These limits do not make the demo production-ready.
 The service and failure endpoint must never be exposed to public internet
 or production traffic. Read the [security policy](SECURITY.md) and
 [experiment protocol](docs/experiment.md) first.
@@ -100,19 +108,28 @@ or production traffic. Read the [security policy](SECURITY.md) and
 ## Containers and Kubernetes examples
 
 For an optional local container build, use
-`docker build -t sre-reliability-lab:local .`.
+`docker build -t platform-reliability-lab:local .`.
 
 The [example Deployment](k8s/deployment.yaml) uses the placeholder
-`ghcr.io/YOUR_USERNAME/sre-reliability-lab:VERSION`. A future disposable
+`ghcr.io/YOUR_USERNAME/platform-reliability-lab:VERSION`. A future disposable
 cluster experiment requires a reviewed image reference and verification
-of the active Kubernetes context. The namespace remains
-`sre-reliability-lab`, and the Deployment and Service remain
+of the active Kubernetes context. The namespace is
+`platform-reliability-lab`, and the Deployment and Service remain
 `reliability-demo`. Static schema validation does not establish successful
 rollout, runtime security, or availability.
 
 ## Delivery and security evidence
 
 - The container runs as UID/GID 10001 with a digest-pinned Python Alpine base.
+- Dependabot checks the Docker base image and pinned GitHub Actions weekly.
+- `krb5-libs=1.22.3-r0` is an intentionally pinned Alpine security dependency
+  included while the selected base image requires a patched Kerberos package.
+  Dependabot does **not** update `apk add` version pins. On base-image updates,
+  manually check `apk info -v krb5-libs` inside the new build, compare with the
+  Alpine security advisory and run the container vulnerability scan. Remove the
+  explicit `apk` pin only when the updated base already contains an acceptable
+  patched package version, then review the Dockerfile change in a separate PR.
+  Never suppress findings or loosen vulnerability gates to complete an update.
 - Checkout Actions use a full commit SHA. Trivy uses a pinned image digest.
 - PR verification tests Python, checks YAML and Kubernetes schemas, builds
   the container, runs HTTP smoke tests, and scans the image.
