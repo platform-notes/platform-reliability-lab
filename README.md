@@ -93,6 +93,12 @@ curl -fsS http://127.0.0.1:8080/metrics
 
 The `/failure` endpoint requires explicit opt-in through
 `ENABLE_FAILURE_ENDPOINT=true`. Use it only for a bounded failure drill.
+`MAX_CONNECTIONS` defaults to 64 active request handlers (1–4096 accepted); extra
+connections receive HTTP 503. Each connection has a 10-second socket timeout.
+For Kubernetes, keep `terminationGracePeriodSeconds` (default 30 seconds)
+longer than the 10-second socket timeout to allow in-flight requests to finish.
+SIGTERM/SIGINT trigger an orderly server shutdown, and interrupted writes
+still record request outcomes. These limits do not make the demo production-ready.
 The service and failure endpoint must never be exposed to public internet
 or production traffic. Read the [security policy](SECURITY.md) and
 [experiment protocol](docs/experiment.md) first.

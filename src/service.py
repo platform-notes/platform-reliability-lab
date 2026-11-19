@@ -1,6 +1,8 @@
 """Small observability demonstration using only Python's standard library."""
 import json
 import os
+import signal
+import socket
 import threading
 import time
 import uuid
@@ -92,7 +94,45 @@ class Metrics:
 
 METRICS = Metrics()
 
+class BoundedHTTPServer(ThreadingHTTPServer):
+    """Bound concurrent handlers and allow them to finish during shutdown."""
+
+    daemon_threads = False
+
+    def __init__(self, address, handler, max_connections=64):
+        if not 1 <= max_connections <= 4096:
+            raise ValueError("MAX_CONNECTIONS must be between 1 and 4096")
+        self.connection_limit = threading.BoundedSemaphore(max_connections)
+        super().__init__(address, handler)
+
+    def process_request(self, request, client_address):
+        if not self.connection_limit.acquire(blocking=False):
+            try:
+                request.settimeout(1)
+                request.sendall(
+                    b"HTTP/1.1 503 Service Unavailable\r\n"
+                    b"Connection: close\r\nContent-Length: 0\r\n\r\n"
+                )
+            except (OSError, socket.timeout):
+                pass
+            finally:
+                self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self.connection_limit.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self.connection_limit.release()
+
+
 class Handler(BaseHTTPRequestHandler):
+    timeout = 10
     def do_GET(self):
         start = time.perf_counter()
         route = urlsplit(self.path).path
@@ -115,16 +155,20 @@ class Handler(BaseHTTPRequestHandler):
             status = 404
             body = b'{"error":"not_found"}\n'
             content_type = 'application/json'
-        self.send_response(status)
-        self.send_header('Content-Type', content_type)
-        self.send_header('Content-Length', str(len(body)))
-        self.send_header('X-Request-ID', request_id)
-        self.end_headers()
-        self.wfile.write(body)
-        duration = max(time.perf_counter() - start, 0)
-        if route != '/metrics':
-            METRICS.observe('GET', route if route in ('/', '/healthz', '/failure') else 'unmatched', status, duration)
-            print(json.dumps({'event':'request','request_id':request_id,'route':route,'status':status,'duration_ms':round(duration*1000,3)}), flush=True)
+        try:
+            self.send_response(status)
+            self.send_header('Content-Type', content_type)
+            self.send_header('Content-Length', str(len(body)))
+            self.send_header('X-Request-ID', request_id)
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # Client disconnected; still record the server-side outcome.
+        finally:
+            duration = max(time.perf_counter() - start, 0)
+            if route != '/metrics':
+                METRICS.observe('GET', route if route in ('/', '/healthz', '/failure') else 'unmatched', status, duration)
+                print(json.dumps({'event':'request','request_id':request_id,'route':route,'status':status,'duration_ms':round(duration*1000,3)}), flush=True)
 
     def log_message(self, format, *args):
         pass  # avoid duplicating structured request logs
@@ -132,9 +176,23 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     port = int(os.getenv('PORT', '8080'))
-    server = ThreadingHTTPServer(('0.0.0.0', port), Handler)
-    print(json.dumps({'event': 'start', 'port': port}), flush=True)
-    server.serve_forever()
+    max_connections = int(os.getenv('MAX_CONNECTIONS', '64'))
+    server = BoundedHTTPServer(('0.0.0.0', port), Handler, max_connections)
+
+    def request_shutdown(signum, frame):
+        # shutdown() cannot run on the same thread as serve_forever().
+        threading.Thread(target=server.shutdown, daemon=True).start()
+
+    previous = {sig: signal.getsignal(sig) for sig in (signal.SIGTERM, signal.SIGINT)}
+    try:
+        for sig in previous:
+            signal.signal(sig, request_shutdown)
+        print(json.dumps({'event': 'start', 'port': port}), flush=True)
+        server.serve_forever(poll_interval=0.1)
+    finally:
+        server.server_close()  # Join non-daemon request threads before closing.
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 if __name__ == '__main__':
     main()
