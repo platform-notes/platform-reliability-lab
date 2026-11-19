@@ -100,13 +100,13 @@ or production traffic. Read the [security policy](SECURITY.md) and
 ## Containers and Kubernetes examples
 
 For an optional local container build, use
-`docker build -t sre-reliability-lab:local .`.
+`docker build -t platform-reliability-lab:local .`.
 
 The [example Deployment](k8s/deployment.yaml) uses the placeholder
-`ghcr.io/YOUR_USERNAME/sre-reliability-lab:VERSION`. A future disposable
+`ghcr.io/YOUR_USERNAME/platform-reliability-lab:VERSION`. A future disposable
 cluster experiment requires a reviewed image reference and verification
-of the active Kubernetes context. The namespace remains
-`sre-reliability-lab`, and the Deployment and Service remain
+of the active Kubernetes context. The namespace is
+`platform-reliability-lab`, and the Deployment and Service remain
 `reliability-demo`. Static schema validation does not establish successful
 rollout, runtime security, or availability.
 

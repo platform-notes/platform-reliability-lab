@@ -105,7 +105,7 @@ class Handler(BaseHTTPRequestHandler):
             body = METRICS.render().encode('utf-8')
             content_type = 'text/plain; version=0.0.4; charset=utf-8'
         elif route == '/':
-            body = b'{"service":"sre-reliability-lab","status":"ok"}\n'
+            body = b'{"service":"platform-reliability-lab","status":"ok"}\n'
             content_type = 'application/json'
         elif route == '/failure' and os.getenv('ENABLE_FAILURE_ENDPOINT') == 'true':
             status = 500

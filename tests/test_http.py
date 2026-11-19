@@ -63,7 +63,7 @@ class HTTPTests(unittest.TestCase):
         return body.decode("utf-8").splitlines()
 
     def test_root(self):
-        self.assert_json("/", 200, {"service": "sre-reliability-lab", "status": "ok"})
+        self.assert_json("/", 200, {"service": "platform-reliability-lab", "status": "ok"})
 
     def test_health(self):
         first = self.assert_json("/healthz", 200, {"status": "ok"})
