@@ -121,6 +121,15 @@ rollout, runtime security, or availability.
 ## Delivery and security evidence
 
 - The container runs as UID/GID 10001 with a digest-pinned Python Alpine base.
+- Dependabot checks the Docker base image and pinned GitHub Actions weekly.
+- `krb5-libs=1.22.3-r0` is an intentionally pinned Alpine security dependency
+  included while the selected base image requires a patched Kerberos package.
+  Dependabot does **not** update `apk add` version pins. On base-image updates,
+  manually check `apk info -v krb5-libs` inside the new build, compare with the
+  Alpine security advisory and run the container vulnerability scan. Remove the
+  explicit `apk` pin only when the updated base already contains an acceptable
+  patched package version, then review the Dockerfile change in a separate PR.
+  Never suppress findings or loosen vulnerability gates to complete an update.
 - Checkout Actions use a full commit SHA. Trivy uses a pinned image digest.
 - PR verification tests Python, checks YAML and Kubernetes schemas, builds
   the container, runs HTTP smoke tests, and scans the image.
