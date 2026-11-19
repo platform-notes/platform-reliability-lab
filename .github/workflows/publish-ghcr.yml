@@ -9,7 +9,7 @@ permissions:
 jobs:
   publish:
     name: Publish OCI image
-    if: github.ref == 'refs/heads/main' && github.repository == 'roger-oliveira86/sre-reliability-lab'
+    if: github.ref == 'refs/heads/main' && github.repository == 'roger-oliveira86/platform-reliability-lab'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
