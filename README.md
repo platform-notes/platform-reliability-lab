@@ -98,7 +98,9 @@ connections receive HTTP 503. Each connection has a 10-second socket timeout.
 For Kubernetes, keep `terminationGracePeriodSeconds` (default 30 seconds)
 longer than the 10-second socket timeout to allow in-flight requests to finish.
 SIGTERM/SIGINT trigger an orderly server shutdown, and interrupted writes
-still record request outcomes. These limits do not make the demo production-ready.
+still record request outcomes. The failure switch is read once at server startup;
+restart to change it. Request logs and metrics record only known route labels
+(or `unmatched`), never raw paths. These limits do not make the demo production-ready.
 The service and failure endpoint must never be exposed to public internet
 or production traffic. Read the [security policy](SECURITY.md) and
 [experiment protocol](docs/experiment.md) first.

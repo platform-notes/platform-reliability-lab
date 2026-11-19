@@ -23,12 +23,14 @@ class HTTPTests(unittest.TestCase):
         metrics.start()
         self.addCleanup(metrics.stop)
 
-        output = redirect_stdout(io.StringIO())
+        self.captured_stdout = io.StringIO()
+        output = redirect_stdout(self.captured_stdout)
         output.__enter__()
         self.addCleanup(output.__exit__, None, None, None)
 
         # Handle requests serially so observation finishes before the next scrape.
         self.server = HTTPServer(("127.0.0.1", 0), service.Handler)
+        self.server.failure_endpoint_enabled = False
         self.addCleanup(self.server.server_close)
         thread = threading.Thread(
             target=self.server.serve_forever, kwargs={"poll_interval": 0.01}
@@ -86,7 +88,7 @@ class HTTPTests(unittest.TestCase):
                 self.assert_json("/failure", 404, {"error": "not_found"})
 
     def test_failure_endpoint_enabled(self):
-        os.environ["ENABLE_FAILURE_ENDPOINT"] = "true"
+        self.server.failure_endpoint_enabled = True
         self.assert_json("/failure", 500, {"error": "controlled_failure"})
 
     def test_metrics_preserve_counters_and_histograms_across_scrapes(self):
@@ -105,3 +107,33 @@ class HTTPTests(unittest.TestCase):
                     f'demo_http_duration_seconds_bucket{{{labels},le="+Inf"}} {count}', rows
                 )
         self.assertEqual(self.scrape(), rows)
+
+    def test_failure_disabled_counts_unmatched(self):
+        self.assert_json('/failure', 404, {'error': 'not_found'})
+        self.assertIn('demo_http_requests_total{method="GET",route="unmatched",status="404"} 1', self.scrape())
+
+    def test_sensitive_path_never_logged(self):
+        self.assert_json('/secret-api-token-please-hide?token=hidden', 404, {'error': 'not_found'})
+        self.assertIn('demo_http_requests_total{method="GET",route="unmatched",status="404"} 1', self.scrape())
+        # Handler emits resolved labels only; no raw user-controlled path.
+        self.assertNotIn('secret-api-token-please-hide', service.METRICS.render())
+        self.assertNotIn('secret-api-token-please-hide', self.captured_stdout.getvalue())
+        self.assertNotIn('token=hidden', self.captured_stdout.getvalue())
+
+    def test_server_header_excludes_python(self):
+        connection = HTTPConnection(*self.server.server_address, timeout=5)
+        try:
+            connection.request('GET', '/healthz')
+            response = connection.getresponse()
+            self.assertNotIn('Python', response.getheader('Server'))
+            response.read()
+        finally:
+            connection.close()
+
+    def test_failure_flag_is_cached_at_server_creation(self):
+        self.server.failure_endpoint_enabled = False
+        os.environ['ENABLE_FAILURE_ENDPOINT'] = 'true'
+        self.assert_json('/failure', 404, {'error': 'not_found'})
+        self.server.failure_endpoint_enabled = True
+        os.environ['ENABLE_FAILURE_ENDPOINT'] = 'false'
+        self.assert_json('/failure', 500, {'error': 'controlled_failure'})

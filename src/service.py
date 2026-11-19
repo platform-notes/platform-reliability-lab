@@ -1,5 +1,6 @@
 """Small observability demonstration using only Python's standard library."""
 import json
+import math
 import os
 import signal
 import socket
@@ -9,6 +10,7 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
+ROUTES = frozenset({"/", "/healthz", "/failure"})
 BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5)
 
 class Metrics:
@@ -18,6 +20,10 @@ class Metrics:
         self.durations = {}
 
     def observe(self, method, route, status, duration):
+        if (method != 'GET' or route not in ROUTES | {'unmatched'}
+                or type(status) is not int or not 100 <= status <= 599
+                or not math.isfinite(duration) or duration < 0):
+            raise ValueError('Invalid metric label or duration')
         key = (method, route, str(status))
         hist_key = (method, route)
 
@@ -103,6 +109,7 @@ class BoundedHTTPServer(ThreadingHTTPServer):
         if not 1 <= max_connections <= 4096:
             raise ValueError("MAX_CONNECTIONS must be between 1 and 4096")
         self.connection_limit = threading.BoundedSemaphore(max_connections)
+        self.failure_endpoint_enabled = os.getenv('ENABLE_FAILURE_ENDPOINT') == 'true'
         super().__init__(address, handler)
 
     def process_request(self, request, client_address):
@@ -133,11 +140,18 @@ class BoundedHTTPServer(ThreadingHTTPServer):
 
 class Handler(BaseHTTPRequestHandler):
     timeout = 10
+    server_version = 'ReliabilityLab'
+    sys_version = ''
+
+    def version_string(self):
+        return self.server_version
     def do_GET(self):
         start = time.perf_counter()
         route = urlsplit(self.path).path
         request_id = str(uuid.uuid4())
         status = 200
+        enabled_route = route in ROUTES and (route != '/failure' or self.server.failure_endpoint_enabled)
+        resolved = route if enabled_route else 'unmatched'
         if route == '/healthz':
             body = b'{"status":"ok"}\n'
             content_type = 'application/json'
@@ -147,7 +161,7 @@ class Handler(BaseHTTPRequestHandler):
         elif route == '/':
             body = b'{"service":"platform-reliability-lab","status":"ok"}\n'
             content_type = 'application/json'
-        elif route == '/failure' and os.getenv('ENABLE_FAILURE_ENDPOINT') == 'true':
+        elif route == '/failure' and enabled_route:
             status = 500
             body = b'{"error":"controlled_failure"}\n'
             content_type = 'application/json'
@@ -167,8 +181,8 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             duration = max(time.perf_counter() - start, 0)
             if route != '/metrics':
-                METRICS.observe('GET', route if route in ('/', '/healthz', '/failure') else 'unmatched', status, duration)
-                print(json.dumps({'event':'request','request_id':request_id,'route':route,'status':status,'duration_ms':round(duration*1000,3)}), flush=True)
+                print(json.dumps({'event':'request','request_id':request_id,'route':resolved,'status':status,'duration_ms':round(duration*1000,3)}), flush=True)
+                METRICS.observe('GET', resolved, status, duration)
 
     def log_message(self, format, *args):
         pass  # avoid duplicating structured request logs

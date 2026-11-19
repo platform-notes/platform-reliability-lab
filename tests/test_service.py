@@ -150,5 +150,16 @@ class ConnectionLimitTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
 
+class MetricLabelValidationTests(unittest.TestCase):
+    def test_rejects_unsafe_labels_and_invalid_duration(self):
+        for args in [
+            ('GET', '/private/token', 200, .1),
+            ('POST', '/', 200, .1),
+            ('GET', '/', 200, float('nan')),
+            ('GET', '/', 200, -1),
+        ]:
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                Metrics().observe(*args)
+
 if __name__ == '__main__':
     unittest.main()
