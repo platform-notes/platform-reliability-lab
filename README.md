@@ -8,10 +8,11 @@ deterministic incident reporting, with evidence that can be traced back
 to the experiment inputs.
 
 **Repository identity:** The current GitHub repository is
-[`roger-oliveira86/sre-reliability-lab`](https://github.com/roger-oliveira86/sre-reliability-lab).
-`platform-reliability-lab` is a proposed future name. Repository migration
-and a new GHCR package remain subject to separate approval. Historical
-GHCR artifacts retain their original image path and digest.
+[`roger-oliveira86/platform-reliability-lab`](https://github.com/roger-oliveira86/platform-reliability-lab).
+The repository was renamed from `sre-reliability-lab`. The GHCR release
+pause remains active; publication under the new repository name requires
+separate approval. Historical GHCR artifacts retain their original image
+path and digest.
 
 Use isolated, disposable lab environments. This project is intended for
 educational experiments. Production deployment is outside its validated scope.
