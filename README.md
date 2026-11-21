@@ -121,6 +121,11 @@ rollout, runtime security, or availability.
 ## Delivery and security evidence
 
 - The container runs as UID/GID 10001 with a digest-pinned Python Alpine base.
+- The runtime image removes `pip` and the bundled `ensurepip` wheels. The service
+  uses only the Python standard library, so no package manager ships in the
+  image. This also removes libraries vendored inside `pip` (for example
+  `urllib3`, `msgpack` and `setuptools`) that container scanners report as
+  vulnerabilities even though the service never imports them.
 - Dependabot checks the Docker base image and pinned GitHub Actions weekly.
 - `krb5-libs=1.22.3-r0` is an intentionally pinned Alpine security dependency
   included while the selected base image requires a patched Kerberos package.
