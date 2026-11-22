@@ -1,28 +1,28 @@
 # AGENTS.md
 
-Instruções para agentes de IA (Claude Code, Codex, etc.) trabalhando neste repositório.
+Instructions for AI agents (Claude Code, Codex, etc.) working in this repository.
 
-## Escopo
+## Scope
 
-- Uma tarefa por sessão, com critério de pronto definido antes de começar.
-- Diff mínimo: altere apenas o necessário para a tarefa.
-- Não altere workflows de CI/CD, dependências ou arquivos fora do escopo da tarefa sem autorização explícita.
+- One task per session, with a clear definition of done before starting.
+- Minimal diff: change only what the task requires.
+- Do not touch CI/CD workflows, dependencies, or files outside the task's scope without explicit authorization.
 
-## Validação antes do merge
+## Validation before merge
 
-- O check obrigatório do repositório deve passar: `checks` (workflow `verify.yml`).
-- Quando houver imagem de runtime: Trivy deve reportar 0 vulnerabilidades HIGH/CRITICAL.
-- Imagens de container devem ser fixadas por digest, não por tag mutável.
-- Workloads devem rodar como non-root.
+- The repository's required check must pass: `checks` (workflow `verify.yml`).
+- When there is a runtime image: Trivy must report 0 HIGH/CRITICAL vulnerabilities.
+- Container images must be pinned by digest, not a mutable tag.
+- Workloads must run as non-root.
 
-## Nunca
+## Never
 
-- Push direto na branch `main`.
-- Publicar imagens no GHCR (pausa vigente).
-- Commitar segredos, tokens, e-mail pessoal ou outros dados pessoais.
-- Reescrever histórico (force-push, rebase de commits já publicados, etc.).
+- Push directly to the `main` branch.
+- Publish images to GHCR (pause currently in effect).
+- Commit secrets, tokens, personal email, or other personal data.
+- Rewrite history (force-push, rebasing already-published commits, etc.).
 
-## Revisão
+## Review
 
-- Codex comenta no PR.
-- Merge é feito pelo dono do repositório, apenas com CI verde.
+- Codex comments on the PR.
+- Merge is performed by the repository owner, only with green CI.
