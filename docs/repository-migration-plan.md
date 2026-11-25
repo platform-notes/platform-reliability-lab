@@ -47,7 +47,7 @@ changes only the plan.
 | HTTP service identity and its assertion in [service](../src/service.py) and [test](../tests/test_http.py) | Updated by AUDIT-FIX-04 | Response identity and assertion now use `platform-reliability-lab`. Previous value is historical migration context only. |
 | Starter archive filename in [gitignore](../.gitignore) | Safe to preserve forever | Retain the historical filename exclusion. |
 | README relative links and workflow file paths | Safe to preserve forever while paths exist | Validate after cutover. They do not depend on repository name. No repository-name badges were present in this repository. |
-| DEV.to article and LinkedIn/profile backlinks | Unknown | Review the published [DEV.to article](https://dev.to/rogeroliveira86/from-llm-tool-calling-to-deterministic-aiops-lessons-from-kubernetes-troubleshooting-57jb) and owner-managed profile/LinkedIn content after cutover. No external account edits are part of preparation. Full backlink coverage is unverified. |
+| DEV.to article and LinkedIn/profile backlinks | Unknown | Review the published [DEV.to article](https://dev.to/platform-notes/from-llm-tool-calling-to-deterministic-aiops-lessons-from-kubernetes-troubleshooting-57jb) and owner-managed profile/LinkedIn content after cutover. No external account edits are part of preparation. Full backlink coverage is unverified. |
 | [Kubernetes From Scratch](https://github.com/platform-notes/kubernetes-from-scratch) and K8S-008 PR reference | Safe to preserve forever | Keep the distinct learning repository and existing POC reference. Companion source is read-only. |
 | Webhooks, applications, CI consumers and package integrations | Unknown beyond visible inventory | Recheck integration subscriptions, repository IDs, slugs, permissions and delivery status at cutover. |
 | Checkout action SHA, base-image/Trivy digests, Kubeconform schema sources and external blueprint links | Safe to preserve independently of rename | Retain the pins and current URLs. Updates require their own justification. |
@@ -70,7 +70,7 @@ These observations are a preflight snapshot, not a guarantee of cutover state.
 | Repository hooks | Successful read returned an empty array | Recheck at cutover; this does not enumerate all application integrations. |
 | Application installations | HTTP 404 from attempted repository installation inventory | Application inventory remains unverified. Require owner review. |
 | Secret scanning / push protection / Dependabot security updates | Enabled in visible repository settings | Secret values were not read. Any integration-specific credential configuration requires owner verification. |
-| Prior PR CI | [Run 44416084930](https://github.com/platform-notes/sre-reliability-lab/actions/runs/44416084930), source head `8712fed5700aa6f836d0eb204f6584528a94e60f`, completed successfully | Existing scan reported **16 HIGH, 0 CRITICAL**, all listed findings in `krb5-libs`. Fix availability and exploitability were not assessed here. |
+| Prior PR CI | [Run 44416084930](https://github.com/platform-notes/platform-reliability-lab/actions/runs/44416084930), source head `8712fed5700aa6f836d0eb204f6584528a94e60f`, completed successfully | Existing scan reported **16 HIGH, 0 CRITICAL**, all listed findings in `krb5-libs`. Fix availability and exploitability were not assessed here. |
 
 The [publisher](../.github/workflows/publish-ghcr.yml) uses
 `workflow_dispatch`, requires `refs/heads/main`, and allows only

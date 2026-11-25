@@ -172,7 +172,7 @@ and validation.
 - [Publication checklist](docs/publication-checklist.md)
 - [Kubernetes From Scratch](https://github.com/platform-notes/kubernetes-from-scratch)
   provides the separate Linux and Kubernetes learning sequence and exercises.
-- [From LLM Tool Calling to Deterministic AIOps: Lessons from Kubernetes Troubleshooting](https://dev.to/rogeroliveira86/from-llm-tool-calling-to-deterministic-aiops-lessons-from-kubernetes-troubleshooting-57jb)
+- [From LLM Tool Calling to Deterministic AIOps: Lessons from Kubernetes Troubleshooting](https://dev.to/platform-notes/from-llm-tool-calling-to-deterministic-aiops-lessons-from-kubernetes-troubleshooting-57jb)
   describes the published learning experience.
 
 ## Provenance and license
