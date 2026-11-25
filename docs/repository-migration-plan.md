@@ -2,8 +2,8 @@
 
 RM-GITHUB-PLATFORM-002 · GOV-002 · November 18, 2026
 Status: preparation for owner review. Current repository:
-`roger-oliveira86/sre-reliability-lab`. Proposed future repository:
-`roger-oliveira86/platform-reliability-lab`.
+`platform-notes/sre-reliability-lab`. Proposed future repository:
+`platform-notes/platform-reliability-lab`.
 
 ## Verified starting point
 
@@ -21,7 +21,7 @@ Its collection qualities remain `complete`, `missing_evidence`, and
 
 Historical verified publication, **November 7, 2026**:
 
-`ghcr.io/roger-oliveira86/sre-reliability-lab@sha256:4b6013f5ac28b109fbcba868dec2239786c13ce2bfa4f00d20d3bc29d5a60517`
+`ghcr.io/platform-notes/sre-reliability-lab@sha256:4b6013f5ac28b109fbcba868dec2239786c13ce2bfa4f00d20d3bc29d5a60517`
 
 This reference always retains its original path and digest. Its dated scan
 is historical evidence. Current package access and vulnerability status
@@ -39,7 +39,7 @@ changes only the plan.
 | Historical OCI reference in README and this plan | Historical evidence—never change | Preserve original package path, digest and date. |
 | GHCR package naming, visibility and ACLs | Unknown | Establish ownership, permissions, repository association and consumer access before selecting a future package strategy. Repository redirects do not establish package migration. |
 | Publisher `github.repository` guard in [publish-ghcr.yml](../.github/workflows/publish-ghcr.yml) | Must change at cutover | Review the exact-name change below. Keep the manual trigger and `main` requirement. |
-| Publisher `REPO`, computed image name and OCI source/revision labels | Must review at cutover | `REPO` comes from `github.repository`. Future publication would target `ghcr.io/roger-oliveira86/platform-reliability-lab:sha-<12 chars>` and a new source URL. That package has no verified publication in this review. Existing labels remain historical. |
+| Publisher `REPO`, computed image name and OCI source/revision labels | Must review at cutover | `REPO` comes from `github.repository`. Future publication would target `ghcr.io/platform-notes/platform-reliability-lab:sha-<12 chars>` and a new source URL. That package has no verified publication in this review. Existing labels remain historical. |
 | Commands and image examples in [publication guide](ghcr-publication.md) | Must change at cutover for active commands | Update `--repo` arguments after rename. Choose package examples only after package access and publication strategy are approved. |
 | Local Docker tag `sre-reliability-lab:local` | Updated by AUDIT-FIX-04 | Local example renamed to `platform-reliability-lab:local`; the older tag is retained here only as historical migration context. |
 | Placeholder image in [Deployment](../k8s/deployment.yaml) | Updated by AUDIT-FIX-04 | The placeholder is now `ghcr.io/YOUR_USERNAME/platform-reliability-lab:VERSION`. This does not authorize publication or deployment; existing GHCR image paths and digests remain historical. |
@@ -48,7 +48,7 @@ changes only the plan.
 | Starter archive filename in [gitignore](../.gitignore) | Safe to preserve forever | Retain the historical filename exclusion. |
 | README relative links and workflow file paths | Safe to preserve forever while paths exist | Validate after cutover. They do not depend on repository name. No repository-name badges were present in this repository. |
 | DEV.to article and LinkedIn/profile backlinks | Unknown | Review the published [DEV.to article](https://dev.to/rogeroliveira86/from-llm-tool-calling-to-deterministic-aiops-lessons-from-kubernetes-troubleshooting-57jb) and owner-managed profile/LinkedIn content after cutover. No external account edits are part of preparation. Full backlink coverage is unverified. |
-| [Kubernetes From Scratch](https://github.com/roger-oliveira86/kubernetes-from-scratch) and K8S-008 PR reference | Safe to preserve forever | Keep the distinct learning repository and existing POC reference. Companion source is read-only. |
+| [Kubernetes From Scratch](https://github.com/platform-notes/kubernetes-from-scratch) and K8S-008 PR reference | Safe to preserve forever | Keep the distinct learning repository and existing POC reference. Companion source is read-only. |
 | Webhooks, applications, CI consumers and package integrations | Unknown beyond visible inventory | Recheck integration subscriptions, repository IDs, slugs, permissions and delivery status at cutover. |
 | Checkout action SHA, base-image/Trivy digests, Kubeconform schema sources and external blueprint links | Safe to preserve independently of rename | Retain the pins and current URLs. Updates require their own justification. |
 
@@ -70,11 +70,11 @@ These observations are a preflight snapshot, not a guarantee of cutover state.
 | Repository hooks | Successful read returned an empty array | Recheck at cutover; this does not enumerate all application integrations. |
 | Application installations | HTTP 404 from attempted repository installation inventory | Application inventory remains unverified. Require owner review. |
 | Secret scanning / push protection / Dependabot security updates | Enabled in visible repository settings | Secret values were not read. Any integration-specific credential configuration requires owner verification. |
-| Prior PR CI | [Run 44416084930](https://github.com/roger-oliveira86/sre-reliability-lab/actions/runs/44416084930), source head `8712fed5700aa6f836d0eb204f6584528a94e60f`, completed successfully | Existing scan reported **16 HIGH, 0 CRITICAL**, all listed findings in `krb5-libs`. Fix availability and exploitability were not assessed here. |
+| Prior PR CI | [Run 44416084930](https://github.com/platform-notes/sre-reliability-lab/actions/runs/44416084930), source head `8712fed5700aa6f836d0eb204f6584528a94e60f`, completed successfully | Existing scan reported **16 HIGH, 0 CRITICAL**, all listed findings in `krb5-libs`. Fix availability and exploitability were not assessed here. |
 
 The [publisher](../.github/workflows/publish-ghcr.yml) uses
 `workflow_dispatch`, requires `refs/heads/main`, and allows only
-`roger-oliveira86/sre-reliability-lab`. The baseline is `contents: read`;
+`platform-notes/sre-reliability-lab`. The baseline is `contents: read`;
 `packages: write` belongs only to its manual publication job.
 The CRITICAL block, SHA-pinned checkout and digest-pinned Trivy remain
 the current controls. A successful check does not establish zero vulnerabilities.
@@ -92,8 +92,8 @@ replacement is the proposed later patch, **only after Gate B permits the
 actual rename and its coordinated follow-up PR**:
 
 ```diff
--    if: github.ref == 'refs/heads/main' && github.repository == 'roger-oliveira86/sre-reliability-lab'
-+    if: github.ref == 'refs/heads/main' && github.repository == 'roger-oliveira86/platform-reliability-lab'
+-    if: github.ref == 'refs/heads/main' && github.repository == 'platform-notes/sre-reliability-lab'
++    if: github.ref == 'refs/heads/main' && github.repository == 'platform-notes/platform-reliability-lab'
 ```
 
 This is a documentation example, not an applied patch. Keep the publisher

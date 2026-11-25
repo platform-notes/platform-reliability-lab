@@ -4,7 +4,7 @@ The lab uses Python 3.12 or later and the standard library. `ReadinessTools`
 loads a versioned JSON fixture and exposes three in-memory queries:
 `get_pod_status`, `get_events`, and `get_endpoints`. The code runs outside
 the service package and container image. The fictional observations follow
-the sequence described in [K8S-008](https://github.com/roger-oliveira86/kubernetes-from-scratch/pull/31).
+the sequence described in [K8S-008](https://github.com/platform-notes/kubernetes-from-scratch/pull/31).
 
 ## Run from the repository root
 

@@ -8,7 +8,7 @@ deterministic incident reporting, with evidence that can be traced back
 to the experiment inputs.
 
 **Repository identity:** The current GitHub repository is
-[`roger-oliveira86/platform-reliability-lab`](https://github.com/roger-oliveira86/platform-reliability-lab).
+[`platform-notes/platform-reliability-lab`](https://github.com/platform-notes/platform-reliability-lab).
 The repository was renamed from `sre-reliability-lab`. The GHCR release
 pause remains active; publication under the new repository name requires
 separate approval. Historical GHCR artifacts retain their original image
@@ -147,7 +147,7 @@ rollout, runtime security, or availability.
 
 **Historical verified publication — November 7, 2026**
 
-`ghcr.io/roger-oliveira86/sre-reliability-lab@sha256:4b6013f5ac28b109fbcba868dec2239786c13ce2bfa4f00d20d3bc29d5a60517`
+`ghcr.io/platform-notes/sre-reliability-lab@sha256:4b6013f5ac28b109fbcba868dec2239786c13ce2bfa4f00d20d3bc29d5a60517`
 
 The recorded HIGH/CRITICAL scan for that publication reported zero findings.
 That dated result is historical evidence. Current image findings and package
@@ -170,7 +170,7 @@ and validation.
 - [Controlled experiment protocol](docs/experiment.md)
 - [Postmortem template](docs/postmortem-template.md)
 - [Publication checklist](docs/publication-checklist.md)
-- [Kubernetes From Scratch](https://github.com/roger-oliveira86/kubernetes-from-scratch)
+- [Kubernetes From Scratch](https://github.com/platform-notes/kubernetes-from-scratch)
   provides the separate Linux and Kubernetes learning sequence and exercises.
 - [From LLM Tool Calling to Deterministic AIOps: Lessons from Kubernetes Troubleshooting](https://dev.to/rogeroliveira86/from-llm-tool-calling-to-deterministic-aiops-lessons-from-kubernetes-troubleshooting-57jb)
   describes the published learning experience.

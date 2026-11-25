@@ -11,13 +11,13 @@ Image publication is separate from PR validation. This workflow is started delib
 **Release pause active:** The commands below are a future release procedure,
 not authorization to publish. Dispatch requires separate owner approval to
 lift the pause and publish under the new repository identity. The workflow
-now derives `ghcr.io/roger-oliveira86/platform-reliability-lab` from the
+now derives `ghcr.io/platform-notes/platform-reliability-lab` from the
 repository name; publication and access for that path remain unverified.
-Existing historical images stay under `ghcr.io/roger-oliveira86/sre-reliability-lab`.
+Existing historical images stay under `ghcr.io/platform-notes/sre-reliability-lab`.
 
 1. Review the PR, check the required `checks` job and squash-merge into protected `main`.
-2. Run `gh workflow run publish-ghcr.yml --repo roger-oliveira86/platform-reliability-lab --ref main`.
-3. Run `gh run list --repo roger-oliveira86/platform-reliability-lab --workflow publish-ghcr.yml --limit 3` and inspect the successful run summary for the published digest.
+2. Run `gh workflow run publish-ghcr.yml --repo platform-notes/platform-reliability-lab --ref main`.
+3. Run `gh run list --repo platform-notes/platform-reliability-lab --workflow publish-ghcr.yml --limit 3` and inspect the successful run summary for the published digest.
 4. Confirm the package is associated with the correct GitHub repository. GHCR packages may initially be **private**; review visibility and package access under GitHub Packages. Do not assume public access.
 5. Use the exact image path and digest recorded by the approved publication when updating `k8s/deployment.yaml` **in a separate PR**. The placeholder in the current manifest is intentionally left unchanged.
 6. Test the image in a disposable cluster, capture the rollout, and record cleanup. Do not use a production cluster.
